@@ -4,6 +4,6 @@ The primary intention of this repository is for group study of Machine Learning 
 
 ## Authors
 
-- @**imhlq**
+@**imhlq**
 
-- @**woaihuoiguo**
+@**woaihuoiguo**
