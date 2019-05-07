@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def method_sample(x):
-    return np.
+    return np.clip(np.sum(x, axis=1), 0.0, 1.0)
 
 
 class Model_Valid:
