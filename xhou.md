@@ -2,7 +2,7 @@
 
 ## Finished:
 
-- 5/6 HW1
+- ~5/6 HW1~
 
 ## Unfinished:
 
