@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 def method_sample(x):
-    return np.clip(np.sum(x, axis=1), 0.0, 1.0)
+    return np.
 
 
 class Model_Valid:
@@ -98,6 +98,8 @@ class Model_Valid:
             xpoint.append(FPR)
             ypoint.append(TPR)
         return xpoint, ypoint
+
+
 
 if __name__ == "__main__":
     mv = Model_Valid(method_sample)
