@@ -6,7 +6,7 @@ def method_sample(x):
     return np.clip(np.sum(x, axis=1), 0.0, 1.0)
 
 
-class Method_Valid:
+class Model_Valid:
     def __init__(self, func):
         self.func = func
     
@@ -31,6 +31,21 @@ class Method_Valid:
             if pi[i] == 0 and yi[i] == 0:
                 TN += 1
         return TP, FN, FP, TN
+
+
+    def calcFscore(self, xi, yi, threshold, beta=1):
+        valMat = self.calcValMat(xi, yi, threshold)
+        if (valMat[0] + valMat[2]) == 0:
+            P = 0
+        else:
+            P = valMat[0] / (valMat[0] + valMat[2])
+        if (valMat[0] + valMat[1]) == 0:
+            R = 0
+        else:
+            R = valMat[0] / (valMat[0] + valMat[1])
+        beta2 = beta*beta
+        return (1+beta2)*P*R / (beta2 * P + R)
+        
 
     def calcPR(self, xi, yi):
         py = self.func(xi)
@@ -85,7 +100,7 @@ class Method_Valid:
         return xpoint, ypoint
 
 if __name__ == "__main__":
-    mv = Method_Valid(method_sample)
+    mv = Model_Valid(method_sample)
     dataset = np.array([[0, 1], [0.1, 0], [1, 1], [0.9, 1], [0.6, 1], [0.6, 0]])
     roc = mv.calcROC(*mv.formatData(dataset))
     pr = mv.calcPR(*mv.formatData(dataset))
