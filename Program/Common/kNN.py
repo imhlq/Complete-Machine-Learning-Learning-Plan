@@ -1,5 +1,6 @@
 #
 # k-Nearset Neighbors algorithm 
+# 距离投票法
 #
 import numpy as np
 
@@ -15,7 +16,7 @@ def classify0(inX, dataSet, labels, k):
     sqDiffMat = diffMat**2
     sqDistances = sqDiffMat.sum(axis=1)
     distances = np.sqrt(sqDistances)
-    sortedDistInd = sqDistances.argsort()
+    sortedDistInd = distances.argsort()
     # Vote k
     classCount = {}
     for i in range(k):
