@@ -1,31 +1,14 @@
-# Chap3 Homework
-
-## 1. Bias b
-
-When input=0, output=0
-
-## 2. Logistic function and likelihood function
-
-Logistic function: 2-order derivative:
-~ $1-\exp(-(wx+b))<>0$ ~ $wx+b<>0$
-
-Likelihood function: 2-order derivative:
-~ $x^2 \exp(wx+b) > 0$
-
-## 3. Logistic Regression On waterlemon 3$\alpha$
-
-```
 # Logistic Regression
 # Corresponding to [Prblem 3.3]
 
 import numpy as np
 import pandas as pd
 
-def createData():
+def createData(filename, columns, label):
     # waterlemon 3a
-    dt = pd.read_csv('watermelon3_0_En.csv')
-    xi = np.array(dt[['Density', 'SugerRatio']])
-    yi = np.array(dt[['Label']])
+    dt = pd.read_csv(filename)
+    xi = np.array(dt[columns])
+    yi = np.array(dt[label])
     return xi, yi
 
 
@@ -51,7 +34,7 @@ class LogisticRegression:
         self.beta = np.random.rand(self.N_dim + 1, 1) # with bias b
         self.output_l()
 
-    def gd(self, n=20000, learning_rate=0.01):
+    def gd(self, n=10000, learning_rate=0.01):
         print('Begin GD...')
         # calculate partial derivatives
         for i in range(n):
@@ -75,8 +58,13 @@ class LogisticRegression:
             return np.where(np.matmul(xi, self.beta) > threshold, 1, 0)
         return func
 
+    def train(self):
+        self.initPara()
+        self.gd()
+        self.output_l()
+
 if __name__ == "__main__":
-    xi, yi = createData()
+    xi, yi = createData('iris.csv', ['sepal length', 'sepal width', 'petal length', 'petal width'], ['label'])
     LR = LogisticRegression(xi, yi)
     LR.initPara()
     LR.gd()
@@ -91,26 +79,3 @@ if __name__ == "__main__":
             correct += 1
         print('Predict:%d, Real:%d' % (yi_, yi[i]))
     print('Total:%d, Correct:%d, Error:%d, Correct_Rate:%.2f%%' % (len(yi), correct, len(yi)- correct, correct/len(yi)*100))
-```
-
-Result:
-```
-Beta:
-[[ 3.11909998]
- [12.37100294]
- [-4.37694282]]
-
-l:
-8.684
-
-Total:17, Correct:12, Error:5, Correct_Rate:70.59%
-```
-
-## 4. 10-fold and keep-one
-
-Just have tried, it will work
-
-
-
-## 5. LDA
-

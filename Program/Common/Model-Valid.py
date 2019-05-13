@@ -99,6 +99,16 @@ class Model_Valid:
             ypoint.append(TPR)
         return xpoint, ypoint
 
+class Learning_Valid:
+    def __init__(self, ML):
+        # Machine Learing Method Port
+        # should include ML.xi, ML.yi, ML.init, ML.train(xi)
+        self.ML = ML
+    
+    def fold_valid(self, n=10):
+        xi = self.ML.xi
+        yi = self.ML.yi
+
 
 
 if __name__ == "__main__":
