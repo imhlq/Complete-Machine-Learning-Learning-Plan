@@ -114,3 +114,15 @@ Just have tried, it will work
 
 ## 5. LDA
 
+```
+python LDA.py
+
+result:
+w=
+ [[  1.42324415]
+ [  9.20684517]
+ [-10.61587897]
+ [-16.29492943]]
+Total:100, Correct:100, Error:0, Correct_Rate:100.00%
+```
+
