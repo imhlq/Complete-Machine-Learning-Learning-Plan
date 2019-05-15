@@ -2,20 +2,33 @@
 # xhou.me
 
 import numpy as np
+import pandas as pd
 
 class Node:
-    def __init__(self, name):
+    def __init__(self, cond):
         self.children = []
-        self.name = name    # for attr value(parent class)
+        self.cond = cond    # for attr value(parent class)
         self.data = None    # for attr class
+        self.data_name = None
+        self.isLeaf = False
+
+    def setLeaf(self, data):
+        # set this node as leaf node
+        self.data = data
+        self.isLeaf = True
     
     def addChild(self, node):
         assert isinstance(node, Node)
         self.children.append(node)
 
-    def __str__(self):
-        nstr = '<Node:%s|%s>|Children:%d>\n' % (self.name, self.data, len(self.children))
-        return nstr
+    def __str__(self, level=0):
+        if self.isLeaf:
+            ret = "\t"*level+repr((self.cond, '*',self.data))+"\n"
+        else:
+            ret = "\t"*level+repr((self.cond, self.data))+"\n"
+        for child in self.children:
+            ret += child.__str__(level+1)
+        return ret
 
 
 class DecisionTree:
@@ -53,43 +66,63 @@ class DecisionTree:
                 # index is important!
                 Gain.append(Ent - Ent_v)
             # return the best one
-            attr = np.argmax(Gain)
-            return attr
+            attr = np.argmin(Gain)
+            return int(attr)
 
     def createBranch(self, xi, yi, root_node=None):
         # -- Recursive --
         # 1. If yi same, return
         # 2. Choose xi
         # 3. Create Node
-        if len(yi)==0 or all(yi==yi[0]):
-            return root_node
-        
+        if all(yi==yi[0]):
+            root_node.setLeaf(int(yi[0])) # int target
+            return 
+
         if root_node is None:
             root_node = self.root
 
-        attr = self.purity(xi, yi, 'IG')
+        if xi.shape[1] == 1:
+            # Last attr
+            attr = 0
+        else:
+            attr = self.purity(xi, yi, 'IG')
+        
         # Create branch
         root_node.data = attr
+        root_node.data_name = ['Color', 'Root', 'Knocks', 'Texture', 'Umbilicus', 'Touch'][attr]
         attr_class = np.unique(xi[:, attr])
         for ev_attr in attr_class:
+
             new_Node = Node(ev_attr)
             root_node.addChild(new_Node)
             # Recursive
-            self.createBranch(xi[xi[:,attr] == ev_attr], yi[xi[:,attr] == ev_attr], new_Node)
+            new_xi = xi[xi[:,attr] == ev_attr]
+            new_yi = yi[xi[:,attr] == ev_attr]
 
-    def display(self, node=None, lev=0):
-        # how to do this?
-        out = '-' * lev
-        if node is None:
-            node = self.root
+            if new_xi.size == 0:
+                # set leaf node, with most common class now
+                counts = np.bincount(yi)
+                new_Node.setLeaf(int(yi[np.argmax(counts)]))
 
-        out += str(node)
-        for child in self.root.children:
-            out += self.display(child, lev+1)
+            self.createBranch(new_xi[:, np.arange(np.shape(xi)[1]) != attr], new_yi, new_Node)
+        return
 
-        return out
+    def __str__(self):
+        return str(self.root)
+
+def createData(filename, columns, label):
+    # waterlemon 3a
+    dt = pd.read_csv(filename)
+    xi = np.array(dt[columns])
+    yi = np.array(dt[label])
+    return xi, yi
 
 if __name__ == "__main__":
+    DataCol = ['Color', 'Root', 'Knocks', 'Texture', 'Umbilicus', 'Touch']
+    TargetCol = ['Label']
+    xi, yi = createData('../Homework@imhlq/Chap3/watermelon3_0_En.csv', DataCol, TargetCol)
+
     dt = DecisionTree()
     dt.createBranch(xi, yi)
-    print(dt.display())
+    print(dt)
+    #print(dt.display())
