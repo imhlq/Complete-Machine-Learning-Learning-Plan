@@ -25,7 +25,7 @@ class Node:
         if self.isLeaf:
             ret = "\t"*level+repr((self.cond, '*',self.data))+"\n"
         else:
-            ret = "\t"*level+repr((self.cond, self.data))+"\n"
+            ret = "\t"*level+repr((self.cond, self.data_name))+"\n"
         for child in self.children:
             ret += child.__str__(level+1)
         return ret
@@ -35,13 +35,23 @@ class DecisionTree:
     def __init__(self):
         self.root = Node('root')
     
-    def entropy(self, pi):
+    def calc_Entropy(self, pi):
         classDict = np.unique(pi)
         Ent = 0
         for k in classDict:
-            p_k = np.shape(pi[pi==k])[0]
+            p_k = np.shape(pi[pi==k])[0] / np.shape(pi)[0]
             Ent += - p_k * np.log2(p_k)
         return Ent
+
+    def calc_Gini(self, pi):
+        # return gini of pi
+        classDict = np.unique(pi)
+        Gini = 0
+        for k in classDict:
+            p_k = np.shape(pi[pi==k])[0] / np.shape(pi)[0]
+            Gini += p_k * p_k
+        Gini = 1 - Gini
+        return Gini
 
     def purity(self, xi, yi, method='IG'):
         # method: the purity concept used to calculate
@@ -49,7 +59,7 @@ class DecisionTree:
         if method == 'IG':
             # Information Gain
             # - Calculate Entropy of total
-            Ent = self.entropy(yi)
+            Ent = self.calc_Entropy(yi)
             
             # Calculate Gain
             Gain = []
@@ -61,13 +71,68 @@ class DecisionTree:
                 for ai_a in classDict:
                     # loop every attribute
                     yi_a = yi[xi[:, ai] == ai_a]
-                    Ent_i = len(yi_a) / len(yi) * self.entropy(yi_a)
+                    Ent_i = len(yi_a) / len(yi) * self.calc_Entropy(yi_a)
                     Ent_v += Ent_i
                 # index is important!
                 Gain.append(Ent - Ent_v)
             # return the best one
-            attr = np.argmin(Gain)
+            attr = np.argmax(Gain)
             return int(attr)
+        
+        elif method == 'GR':
+            # Gain ratio
+            # - Calculate Entropy of total
+            Ent = self.calc_Entropy(yi)
+            
+            # Calculate Gain
+            Gain = []
+            gIV = []
+            # - Calculate Entropy of every attribute
+            for ai in range(np.shape(xi)[1]):
+                # loop every attribute class
+                Ent_v = 0
+                gIV_v = 0
+                classDict = np.unique(xi[:, ai])
+                for ai_a in classDict:
+                    # loop every attribute
+                    yi_a = yi[xi[:, ai] == ai_a]
+                    Ent_i = len(yi_a) / len(yi) * self.calc_Entropy(yi_a)
+                    gIV_i = len(yi_a) / len(yi) * np.log2(len(yi_a) / len(yi))
+                    Ent_v += Ent_i
+                    gIV_v += gIV_i
+                # index is important!
+                Gain.append(Ent - Ent_v)
+                gIV.append(gIV_v)
+            gain_ratio = np.array(Gain) / np.array(gIV)
+            # Heuristic Select by 1. Gain above average, 2. Highest gain_ratio
+            step1 = np.argwhere(Gain > np.mean(Gain))
+            step2 = max(step1, key=lambda a: np.array(Gain)[a])
+            return int(step2)
+    
+        elif method == 'GI':
+            # Gain ratio
+            # - Calculate Entropy of total
+            Gini = self.calc_Gini(yi)
+            
+            # Calculate GI
+            Gi = []
+            # - Calculate Entropy of every attribute
+            for ai in range(np.shape(xi)[1]):
+                # loop every attribute class
+                Gi_v = 0
+                classDict = np.unique(xi[:, ai])
+                for ai_a in classDict:
+                    # loop every attribute
+                    yi_a = yi[xi[:, ai] == ai_a]
+                    Gi_i = len(yi_a) / len(yi) * self.calc_Gini(yi_a)
+                    Gi_v += Gi_i
+                # index is important!
+                Gi.append(Gi_v)
+
+            attr = np.argmin(Gi)
+            return int(attr)
+
+
 
     def createBranch(self, xi, yi, root_node=None):
         # -- Recursive --
@@ -85,7 +150,7 @@ class DecisionTree:
             # Last attr
             attr = 0
         else:
-            attr = self.purity(xi, yi, 'IG')
+            attr = self.purity(xi, yi, 'GI')
         
         # Create branch
         root_node.data = attr
@@ -106,6 +171,10 @@ class DecisionTree:
 
             self.createBranch(new_xi[:, np.arange(np.shape(xi)[1]) != attr], new_yi, new_Node)
         return
+
+    def pruning(self):
+        # postpruning
+        pass
 
     def __str__(self):
         return str(self.root)
